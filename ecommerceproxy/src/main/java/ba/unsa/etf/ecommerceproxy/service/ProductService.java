@@ -13,6 +13,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductService {
@@ -52,22 +56,55 @@ public class ProductService {
         return product;
     }
 
-
-    @HystrixCommand(fallbackMethod = "getDefaultProducts", commandKey = "GetProducts")
+    @HystrixCommand(fallbackMethod = "getDefaultProduct", commandKey = "GetProducts")
     private Product getProductFromCache(String id) {
-        log.info("Returning cached data");
+        log.info("Returning cached product");
         return productCache.get(PRODUCT_CACHE_KEY, id);
-    }
-
-    private Product getDefaultProducts(String id) {
-        log.info("Default fallback");
-        return new Product();
     }
 
     private void updateCache(Product product) {
         try {
             log.debug("Updating cache...");
             productCache.put(PRODUCT_CACHE_KEY, product.getId(), product);
+        }
+        catch (Throwable e) {
+            log.error("Cannot update cache", e);
+        }
+    }
+
+    // ALL PRODUCTS
+
+    @HystrixCommand(fallbackMethod = "getAllProductsFromCache", commandKey = "GetProducts",
+            commandProperties = {
+                    @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value="10000")
+            } )
+    public List<Product> getAllProducts() {
+        log.info("getAllProducts");
+        List<Product> products = productServiceClient.getAllProducts();
+        this.updateCacheWithMultipleProducts(products);
+        return products;
+    }
+
+    @HystrixCommand(fallbackMethod = "getDefaultProducts", commandKey = "GetProducts")
+    private List<Product> getAllProductsFromCache() {
+        log.info("Returning cached all products");
+        return new ArrayList<Product>(productCache.entries(PRODUCT_CACHE_KEY).values());
+    }
+
+    private List<Product> getDefaultProducts() {
+        log.info("Default fallback for all products");
+        return new ArrayList<Product>();
+    }
+
+    private void updateCacheWithMultipleProducts(List<Product> products) {
+        try {
+            log.debug("Updating cache with multiple products");
+            Map<String, Product> productsMap = new HashMap<String, Product>();
+            for (Product p : products) {
+                productsMap.put(p.getId(), p);
+            }
+
+            productCache.putAll(PRODUCT_CACHE_KEY, productsMap);
         }
         catch (Throwable e) {
             log.error("Cannot update cache", e);

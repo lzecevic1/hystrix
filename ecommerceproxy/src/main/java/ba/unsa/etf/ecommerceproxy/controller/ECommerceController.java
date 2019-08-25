@@ -32,4 +32,9 @@ public class ECommerceController {
     public Product getProductById(@PathVariable String id) {
         return productService.getProductById(id);
     }
+
+    @GetMapping("/products/all")
+    public List<Product> getAllProducts() {
+        return productService.getAllProducts();
+    }
 }
