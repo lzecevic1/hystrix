@@ -20,43 +20,43 @@ import org.springframework.data.redis.core.RedisTemplate;
 @EnableCaching
 @Configuration
 public class CachingConfig {
-//
+
 //    @Autowired
 //    private RedisConnectionFactory redisConnectionFactory;
 
-//    @Bean
-//    public LettuceConnectionFactory redisConnectionFactory() {
+    @Bean
+    public LettuceConnectionFactory redisConnectionFactory() {
+
+        return new LettuceConnectionFactory();
+    }
+
+    @Bean
+    public RedisTemplate<String, Product> productRedisTemplate() {
+        RedisTemplate<String, Product> productRedisTemplate = new RedisTemplate<>();
+        productRedisTemplate.setConnectionFactory(redisConnectionFactory());
+        productRedisTemplate.setEnableTransactionSupport(true);
+        return productRedisTemplate;
+    }
+
 //
-//        return new LettuceConnectionFactory();
+//    @Bean
+//    public JedisConnectionFactory redisConnectionFactory() {
+//        JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory();
+//        jedisConnectionFactory.setUsePool(true);
+//        return jedisConnectionFactory;
 //    }
 //
 //    @Bean
-//    public RedisTemplate<String, Product> productRedisTemplate() {
-//        RedisTemplate<String, Product> productRedisTemplate = new RedisTemplate<>();
-//        productRedisTemplate.setConnectionFactory(redisConnectionFactory());
-//        productRedisTemplate.setEnableTransactionSupport(true);
-//        return productRedisTemplate;
+//    @Qualifier("productRedisTemplate")
+//    public RedisTemplate<String, Product> productRedisTemplate(RedisConnectionFactory connectionFactory) {
+//        RedisTemplate redisTemplate = new RedisTemplate<String, Product>();
+//        redisTemplate.setConnectionFactory(connectionFactory);
+//        return redisTemplate;
 //    }
-
-
-    @Bean
-    public JedisConnectionFactory redisConnectionFactory() {
-        JedisConnectionFactory jedisConnectionFactory = new JedisConnectionFactory();
-        jedisConnectionFactory.setUsePool(true);
-        return jedisConnectionFactory;
-    }
-
-    @Bean
-    @Qualifier("productRedisTemplate")
-    public RedisTemplate<String, Product> productRedisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate redisTemplate = new RedisTemplate<String, Product>();
-        redisTemplate.setConnectionFactory(connectionFactory);
-        return redisTemplate;
-    }
-
-    @Bean
-    @Qualifier("productCacheManager")
-    public CacheManager productCacheManager() {
-        return new RedisCacheManager.RedisCacheManagerBuilder().
-    }
+//
+//    @Bean
+//    @Qualifier("productCacheManager")
+//    public CacheManager productCacheManager() {
+//        return new RedisCacheManager.RedisCacheManagerBuilder().
+//    }
 }
